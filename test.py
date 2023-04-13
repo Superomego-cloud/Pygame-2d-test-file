@@ -274,9 +274,9 @@ def delodge():
     for obj in newArr:
         if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
             if (player.hitbox.top - obj.hitbox.bottom)<(player.hitbox.bottom - obj.hitbox.top):
-                player.hitbox.top = obj.hitbox.bottom
+                y -= obj.hitbox.bottom - player.hitbox.top
             else:
-                player.hitbox.bottom = obj.hitbox.top
+                y += player.hitbox.bottom - obj.hitbox.top
             break
 
 movement = False
@@ -286,7 +286,8 @@ up = False
 StartJump = False
 jump = False
 ijump = 0
-
+x = 0
+y = 0
 
 load()
 
@@ -347,29 +348,15 @@ while running:
         updAnim()
 
         if movement:
-            for obj in newArr:
-                if right and not collisionRight:
-                    obj.hitbox.move_ip(player.vel[0]*-1, 0)
-                if left and not collisionLeft:
-                    obj.hitbox.move_ip(player.vel[0], 0)
-            for obj in newArr2:
-                if right and not collisionRight:
-                    obj.hitbox.move_ip(player.vel[0]*-1, 0)
-                if left and not collisionLeft:
-                    obj.hitbox.move_ip(player.vel[0], 0)
-
-            if up and not StartJump and not jump:
-                if collisionDown or level.bugBypass:    
-                    StartJump = True
-                    up = False
+            if right and not collisionRight:
+                x -= player.vel[0]
+            if left and not collisionLeft:
+                x += player.vel[0]
             
             if StartJump:    
                 ijump += 1
                 if not collisionUp and not ijump > 106:
-                    for obj in newArr:
-                        obj.hitbox.move_ip(0, player.vel[1])
-                    for obj in newArr2:
-                        obj.hitbox.move_ip(0, player.vel[1])
+                    y += player.vel[1] 
                 else:
                     StartJump = False
                     ijump = 0
@@ -377,10 +364,7 @@ while running:
 
             if not collisionDown:
                 if not StartJump:
-                    for obj in newArr:
-                        obj.hitbox.move_ip(0, -2)
-                    for obj in newArr2:
-                        obj.hitbox.move_ip(0, -2)
+                    y -= player.vel[1]
             else:
                 jump = False
             
@@ -389,6 +373,15 @@ while running:
                 if not level.bugBypass:
                     jump = True
                 
+            for obj in newArr:
+                obj.hitbox.move_ip(x, y)
+                y = 0
+                x = 0
+            for obj in newArr2:
+                obj.hitbox.move_ip(x, y)
+                y = 0
+                x = 0 
+        
         screen.fill([0,0,0])
         drawobj()
         if not dead:
