@@ -66,7 +66,6 @@ class Wall:
     def heal(self):
         player.hp = player.maxhp
         self.touched = True
-        anim(self)
 
 class LevelLayout:
     def __init__(self, RelativeInterval=list, LevelName = str, objList = list, bugBypass = bool):
@@ -98,29 +97,9 @@ def anim(obj):
     
     if obj.ability == "yellow":
         obj.color[2] += 2
-        if obj.color[2] >= 160:
+        if obj.color[2] == 250:
             obj.anim = False
             obj.ability = "Normie"
-    
-    if obj.ability == "green":
-        dirc = 1
-        fr = 0
-        if fr < 200:
-            if obj.color[0] <= 35:
-                dirc = -1
-                obj.color[0] += 1
-                obj.color[2] += 1
-            elif obj.color[0] == 255:
-                dirc = 1
-                obj.color[0] -= 1
-                obj.color[2] -= 1
-            else:
-                obj.color[0] -= 22*dirc
-                obj.color[2] -= 22*dirc
-                fr += 1
-        else:
-            obj.anim = False
-            fr = 0
 
 def updAnim():
     for obj in newArr:
@@ -129,7 +108,7 @@ def updAnim():
 
 def drawobj():
     for obj in newArr:
-        if obj.hitbox.left < 500 and (obj.hitbox.left + obj.hitbox.width) > 0:
+        if obj.hitbox.left < 720 and obj.hitbox.right > 0:
             pygame.draw.rect(screen, obj.color, obj.hitbox)
     for obj in newArr2:
         screen.blit(obj.sprite, [obj.hitbox.left, obj.hitbox.top])
@@ -359,6 +338,9 @@ while running:
             if left and not collisionLeft:
                 x += player.vel[0]
             
+            if up and not jump and not StartJump:
+                StartJump = True
+            
             if StartJump:    
                 ijump += 1
                 if not collisionUp and not ijump > 106:
@@ -378,13 +360,14 @@ while running:
                 delodge()
                 if not level.bugBypass:
                     jump = True
-                
-            for obj in newArr:
-                obj.hitbox.move_ip(x, y)
-            for obj in newArr2:
-                obj.hitbox.move_ip(x, y)
-                y = 0
+
+            if x != 0 or y != 0:    
+                for obj in newArr:
+                    obj.hitbox.move_ip(x, y)
+                for obj in newArr2:
+                    obj.hitbox.move_ip(x, y)
                 x = 0 
+                y = 0
         
         screen.fill([0,0,0])
         drawobj()
