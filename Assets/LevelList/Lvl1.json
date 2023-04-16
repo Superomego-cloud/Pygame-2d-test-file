@@ -1,0 +1,102 @@
+{
+    "name": "Tutorial", 
+    "LevelSize":[0, 2000],
+    "bugBypass": false,
+    "ObjectList":{
+        "Obj1": {
+            "hitbox":[0, 100, 300, 500],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0},
+        "Obj2": {
+            "hitbox":[200, 400, 300, 500],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0},
+        "Obj3": {
+            "hitbox":[100, 200, 450, 500],
+            "color":[255,0,0],
+            "ability": "red",
+            "dmg": 20},
+        "Obj4": {
+            "hitbox":[0, 100, 300, 500],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0},
+        "Obj5":{
+            "hitbox":[-300, 0, -100, 1000],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj6":{
+            "hitbox":[0, 2000, -100, 0],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj7":{
+            "hitbox":[-300, 2000, 1000, 1300],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj8":{
+            "hitbox":[0, 500, 500, 1000],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj9":{
+            "hitbox":[400, 500, 400, 1000],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj10":{
+            "hitbox":[500, 600, 500, 1000],
+            "color":[255,255,0],
+            "ability": "yellow",
+            "dmg": 0
+        },
+        "Obj11":{
+            "hitbox":[600, 700, 600, 1000],
+            "color":[0,255,0],
+            "ability": "green",
+            "dmg": 0
+        },
+        "Obj12":{
+            "hitbox":[700, 800, 700, 1000],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj13":{
+            "hitbox":[800, 900, 800, 1000],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        },
+        "Obj14":{
+            "hitbox":[900, 1000, 900, 1000],
+            "color":[255,255,255],
+            "ability": "Normie",
+            "dmg": 0
+        }
+    },
+    "BoxList":{
+        "RedBoxes":{
+            "spriteIndex":0,
+            "boxList":[[500, 0], [100, 0]] 
+        },
+        "OrangeBoxes":{
+            "spriteIndex":1,
+            "boxList":[[300, 1]] 
+        },
+        "GreenBoxes":{
+            "spriteIndex":3,
+            "boxList":[[900,800]]
+        }
+    }
+}
+
