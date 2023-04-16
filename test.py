@@ -189,7 +189,10 @@ def playerCol():
                 case "red":
                     player.hp -= 10
                 case "green":
-                    player.hp += 10
+                    if player.hp < player.maxhp - 10:
+                        player.hp += 10
+                    elif player.hp < player.maxhp:
+                        player.hp = player.maxhpxhp
                 case "orange":
                     asyncio.run(obj.jump())
 
@@ -271,6 +274,9 @@ def collisionCheck():
     player.hitbox.move_ip(0, 2)
 
 def delodge():
+    
+    global y
+
     for obj in newArr:
         if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
             if (player.hitbox.top - obj.hitbox.bottom)<(player.hitbox.bottom - obj.hitbox.top):
@@ -375,8 +381,6 @@ while running:
                 
             for obj in newArr:
                 obj.hitbox.move_ip(x, y)
-                y = 0
-                x = 0
             for obj in newArr2:
                 obj.hitbox.move_ip(x, y)
                 y = 0
