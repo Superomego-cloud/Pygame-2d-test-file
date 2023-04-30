@@ -1,4 +1,4 @@
-import pygame, time, json, os, asyncio, sys
+import pygame, time, json, os, asyncio, sys, gc
 
 screen = pygame.display.set_mode([720, 500])
 currentScriptDir = os.path.dirname(__file__)
@@ -67,6 +67,15 @@ class Wall:
         player.hp = player.maxhp
         self.touched = True
 
+class MovingWall(Wall):
+    def __init__(self, dir=int, arr=list, rgbArr = [255, 255, 255], ability = str ,killVal=50):
+        super.__init__(arr, rgbArr, ability, killVal)
+        self.targethitbox = pygame.Rect([arr[0], arr[2]],[arr[1] - arr[0], arr[3] - arr[2]])
+        self.targethitbox.move_ip(dir[0], dir[1])
+    def moveHitbox(self, x, y):
+        self.targethitbox.move_ip(x, y)
+        self.hitbox.move_ip(x, y)
+        
 class LevelLayout:
     def __init__(self, RelativeInterval=list, LevelName = str, objList = list, bugBypass = bool):
         self.RelativeInterval = RelativeInterval
@@ -85,12 +94,19 @@ class BoxObject:
         StartJumpTimer[0] = True
         StartJumpTimer[1] = 6000
 
+class quadNode:
+    def __init__(self, bounds):
+        self.wallList = []
+        self.boxList = []
+        self.bounds = bounds
+
 player = Player(150, 236, 100)
 Arr = currentData["ObjectList"]
 Arr2 = currentData["BoxList"]
 newArr = []
 newArr2 = []
 boxArr = []
+newArr3 = []
 level = ""
 
 def anim(obj):
@@ -134,6 +150,26 @@ def load():
             boxArr.append(currentBox)
     level = LevelLayout(currentData["LevelSize"], currentData["name"], newArr, currentData["bugBypass"])
     boxArr = tuple(boxArr)
+    quadSetup()
+
+quadTree = []
+
+def quadSetup():
+    
+    global quadTree
+    
+    for i in range(-1, level.RelativeInterval[1]//500):
+        quadTree.append(quadNode(pygame.Rect([i*500 - 100, -1000], [700, 3000])))
+    
+    for node in quadTree:
+        for obj in newArr:
+            if pygame.Rect.colliderect(node.bounds, obj.hitbox):
+                node.wallList.append(obj)
+        for obj in newArr2:
+            if pygame.Rect.colliderect(node.bounds, obj.hitbox):
+                node.boxList.append(obj)
+    
+        
 
 def boxGrav():
     
@@ -190,59 +226,60 @@ def collisionCheck():
     global SmallJump
 
     player.hitbox.move_ip(1, 0)
-    for obj in newArr:
-        if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
-            collisionRight = True
-            if obj.ability == powerList[0]:
-                player.hp -= obj.dmg
-            break
-        else:
-            collisionRight = False
+    for obj in CurrentNode.wallList:
+        if obj.hitbox.left < 720 and obj.hitbox.right > 0:
+            if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
+                collisionRight = True
+                if obj.ability == powerList[0]:
+                    player.hp -= obj.dmg
+                break
+            else:
+                collisionRight = False
 
     player.hitbox.move_ip(-1, 0)
 
     player.hitbox.move_ip(-1, 0)
-    for obj in newArr:
-        if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
-            collisionLeft = True
-            if obj.ability == powerList[0]:
-                player.hp -= obj.dmg
-            if obj.ability == powerList[3]:
-                obj.heal()
-                obj.anim = True
-            break
-        else:
-            collisionLeft = False
+    for obj in CurrentNode.wallList:
+        if obj.hitbox.left < 720 and obj.hitbox.right > 0:
+            if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
+                collisionLeft = True
+                if obj.ability == powerList[0]:
+                    player.hp -= obj.dmg
+                if obj.ability == powerList[3]:
+                    obj.heal()
+                    obj.anim = True
+                break
+            else:
+                collisionLeft = False
     player.hitbox.move_ip(1, 0)
 
     player.hitbox.move_ip(0, 2)
-    for obj in newArr:
-        if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
-            collisionDown = True
-            match obj.ability:
-                case "red":
-                    player.hp -= obj.dmg
-                case "orange":
-                    obj.jump()
-                case "yellow":
-                    if not obj.touched:
-                        obj.money()
+    for obj in CurrentNode.wallList:
+        if obj.hitbox.left < 720 and obj.hitbox.right > 0:
+            if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
+                collisionDown = True
+                match obj.ability:
+                    case "red":
+                        player.hp -= obj.dmg
+                    case "orange":
+                        obj.jump()
+                    case "yellow":
+                        if not obj.touched:
+                            obj.money()
+                            obj.anim = True
+                    case "green":
+                        player.hp += obj.dmg 
                         obj.anim = True
-                case "green":
-                    player.hp += obj.dmg 
-                    obj.anim = True
-                case "cyan":
-                    obj.run()
-            break
-        else:
-            collisionDown = False
-            player.vel[0] = player.defvel[0]
-            player.vel[1] = player.defvel[1]
+                    case "cyan":
+                        obj.run()
+                break
+            else:
+                collisionDown = False
     
     player.hitbox.move_ip(0, -2)
 
     player.hitbox.move_ip(0, -2)
-    for obj in newArr:
+    for obj in CurrentNode.wallList:
         if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
             collisionUp = True
             if obj.ability == powerList[0]:
@@ -258,10 +295,19 @@ def delodge():
 
     for obj in newArr:
         if pygame.Rect.colliderect(player.hitbox, obj.hitbox):
-            if (player.hitbox.top - obj.hitbox.bottom)<(player.hitbox.bottom - obj.hitbox.top):
+            if (player.hitbox.top - obj.hitbox.bottom)>(player.hitbox.bottom - obj.hitbox.top):
                 y -= obj.hitbox.bottom - player.hitbox.top
             else:
                 y += player.hitbox.bottom - obj.hitbox.top
+            break
+
+def findCurrentNode():
+    
+    global CurrentNode
+    
+    for node in quadTree:
+        if pygame.Rect.colliderect(node.bounds, player.hitbox):
+            CurrentNode = node
             break
 
 movement = False
@@ -276,9 +322,18 @@ y = 0
 
 load()
 
+screen.fill([0, 0, 100])
+pygame.display.update()
+gc.collect()
+
+time.sleep(1)
+
+CurrentNode = quadTree[1]
+
 while running:
 
     clock.tick(500)
+    pygame.time.set_timer(pygame.USEREVENT+1, 30000)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -303,7 +358,9 @@ while running:
             if event.key == pygame.K_LEFT:
                 left = False
             if event.key == pygame.K_UP:
-                up = False   
+                up = False 
+        if event.type == pygame.USEREVENT+1:
+            gc.collect()  
     
     if player.hp <= 0:
             dead = True
@@ -324,7 +381,9 @@ while running:
 
     
     if not inventory:
-
+        
+        findCurrentNode()
+        
         if len(newArr2)>0:
             boxGrav()
             playerCol()
@@ -352,20 +411,19 @@ while running:
 
             if not collisionDown:
                 if not StartJump:
-                    y -= player.vel[1]
+                    y -= 2
             else:
                 jump = False
             
-            if collisionUp and collisionDown:
                 delodge()
-                if not level.bugBypass:
-                    jump = True
 
             if x != 0 or y != 0:    
                 for obj in newArr:
                     obj.hitbox.move_ip(x, y)
                 for obj in newArr2:
                     obj.hitbox.move_ip(x, y)
+                for obj in quadTree:
+                    obj.bounds.move_ip(x, y)
                 x = 0 
                 y = 0
         
@@ -381,6 +439,7 @@ while running:
             time.sleep(1)
             player.hp = 100
             dead = False
+            player.vel = list(player.defvel[:])
             for obj in newArr:
                 obj.hitbox.left = obj.defaulthitbox.left
                 obj.hitbox.top = obj.defaulthitbox.top
@@ -399,5 +458,6 @@ while running:
     else:
         screen.fill([0,100,0])
         pygame.display.flip()
+
 
 pygame.quit()
